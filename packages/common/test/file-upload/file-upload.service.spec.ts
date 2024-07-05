@@ -3,6 +3,7 @@ import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { Client } from 'minio';
 import * as fs from 'fs';
 import * as path from 'path';
+import { FileUploadRequestDTO, SaveToLocaleRequestDTO } from 'src';
 jest.mock('minio');
 jest.mock('fs');
 jest.mock('path');
@@ -46,7 +47,7 @@ describe('FileUploadService', () => {
   });
 
   describe('saveLocalFile', () => {
-    const mockFile = {
+    const mockFile  = {
       buffer: Buffer.from('test file'),
     };
     const mockDestination = 'uploads';
@@ -59,7 +60,12 @@ describe('FileUploadService', () => {
     });
 
     it('should save a file locally', async () => {
-      const result = await service.saveLocalFile(mockDestination, mockFilename, mockFile);
+      const saveToLocaleRequestDto : SaveToLocaleRequestDTO = {
+        destination: mockDestination,
+        filename: mockFilename,
+        file: mockFile,
+      };
+      const result = await service.saveLocalFile(saveToLocaleRequestDto);
       expect(result).toEqual(mockDestination);
       expect(fs.existsSync).toHaveBeenCalledWith(expect.stringContaining(mockDestination));
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.stringContaining(mockDestination), { recursive: true });
@@ -70,8 +76,12 @@ describe('FileUploadService', () => {
       (fs.mkdirSync as jest.Mock).mockImplementation(() => {
         throw new Error('Directory creation error');
       });
-
-      await service.saveLocalFile(mockDestination, mockFilename, mockFile);
+      const saveToLocaleRequestDto: SaveToLocaleRequestDTO = {
+        destination: mockDestination,
+        filename: mockFilename,
+        file: mockFile,
+      };
+      await service.saveLocalFile(saveToLocaleRequestDto);
       expect(mockLogger.error).toHaveBeenCalledWith('Error creating directory: Directory creation error');
     });
   });
@@ -87,10 +97,15 @@ describe('FileUploadService', () => {
       const expectedUrl = `http://${process.env.STORAGE_ENDPOINT}:${process.env.STORAGE_PORT}/${process.env.MINIO_BUCKETNAME}/${filename}`;
 
       jest.spyOn(service as any, 'uploadToMinio').mockResolvedValue(expectedUrl);
+      const fileUploadDTO: FileUploadRequestDTO = {
+        destination,
+        filename,
+        file,
+      };
 
-      const result = await service.upload(file, destination, filename);
+      const result = await service.upload(fileUploadDTO);
       expect(result).toEqual(expectedUrl);
-      expect(service.uploadToMinio).toHaveBeenCalledWith(filename, file);
+      expect(service.uploadToMinio).toHaveBeenCalledWith(fileUploadDTO);
     });
 
     it('should save a file locally if STORAGE_MODE is not minio', async () => {
@@ -105,10 +120,16 @@ describe('FileUploadService', () => {
       const expectedDestination = 'uploads';
 
       jest.spyOn(service as any, 'saveLocalFile').mockResolvedValue(expectedDestination);
+      
+      const saveToLocaleRequestDto: SaveToLocaleRequestDTO = {
+        destination: destination,
+        filename: filename,
+        file: file,
+      };
 
-      const result = await service.upload(file, destination, filename);
+      const result = await service.upload(saveToLocaleRequestDto);
       expect(result).toEqual(expectedDestination);
-      expect(service.saveLocalFile).toHaveBeenCalledWith(destination, filename, file);
+      expect(service.saveLocalFile).toHaveBeenCalledWith(saveToLocaleRequestDto);
     });
 
     it('should handle upload errors', async () => {
@@ -121,7 +142,13 @@ describe('FileUploadService', () => {
 
       jest.spyOn(service as any, 'uploadToMinio').mockRejectedValue(new Error('Upload error'));
 
-      await expect(service.upload(file, destination, filename)).rejects.toThrow(InternalServerErrorException);
+      const fileUploadDTO: FileUploadRequestDTO = {
+        destination: destination,
+        filename: filename,
+        file: file,
+      };
+
+      await expect(service.upload(fileUploadDTO)).rejects.toThrow(InternalServerErrorException);
       expect(mockLogger.error).toHaveBeenCalledWith('Error uploading file: Error: Upload error');
     });
   });
