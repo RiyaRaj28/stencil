@@ -38,7 +38,7 @@ jobs:
       matrix:
         dir:
           # - '01-all-features'
-          # - '02-monitoring'
+          - '02-monitoring'
           - '03-response-formatting'
           - '04-logging'
           - '05-temporal-package'
