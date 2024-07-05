@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - master
       - dev
 
 jobs:
@@ -19,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.7
 
       - name: Use Node.js 
         uses: actions/setup-node@v4
