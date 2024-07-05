@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - master
-      - dev
+      - dev1
 
 jobs:
   test-package:
