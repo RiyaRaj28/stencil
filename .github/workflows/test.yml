@@ -83,3 +83,30 @@ jobs:
         run: yarn run test:e2e --detectOpenHandles
         working-directory: sample/02-monitoring/test
         timeout-minutes: 1
+
+      - name: Enable debug logging
+        run: echo "::debug::Enable debug logging"
+
+      - name: List running processes
+        run: ps -ef
+
+      - name: List running processes with top
+        run: top -b -n 1
+
+      - name: List running Docker containers
+        run: docker ps -a
+
+      - name: Run command with timeout
+        run: timeout 30s my-command
+
+      - name: Capture system calls with sysdig
+        run: sysdig -w /tmp/sysdig_capture.scap
+
+      - name: Run my script
+        run: |
+          # Your script code here
+          echo "Running my script..."
+          # ...
+
+      - name: Analyze sysdig capture
+        run: sysdig -r /tmp/sysdig_capture.scap -p "%proc.name %proc.pid %evt.arg.fopis"
