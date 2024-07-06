@@ -1,0 +1,112 @@
+name: "test"
+
+on:
+  pull_request:
+    branches:
+      - main-new
+      - dev
+
+jobs:
+  test-package:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: 
+          - 'file-upload'
+          - 'interceptor'
+          - 'monitoring'
+          - 'temporal' 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.7
+
+      - name: Use Node.js 
+        uses: actions/setup-node@v4
+
+      - name: Install Dependencies for packages/common
+        run: npm ci
+        working-directory: packages/common
+
+      - name: Run tests
+        run: yarn run test
+        working-directory: packages/common/test/${{ matrix.dir }} 
+        
+  test-sample:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir:
+          # - '01-all-features'
+          # - '02-monitoring'
+          - '03-response-formatting'
+          - '04-logging'
+          - '05-temporal-package'
+          - '06-file-upload'
+         
+    steps: 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 
+        uses: actions/setup-node@v4
+        
+      - name: Install Dependencies for ${{ matrix.dir }}
+        run: yarn install
+        working-directory: sample/${{ matrix.dir }}
+
+      - name: Run Tests
+        run: yarn run test:e2e
+        working-directory: sample/${{ matrix.dir }}/test
+        
+  test-sample-monitoring:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+          
+    steps: 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 
+        uses: actions/setup-node@v4
+        
+      - name: Install Dependencies for monitoring
+        run: yarn install
+        working-directory: sample/02-monitoring
+
+      - name: Run Tests
+        run: yarn run test:e2e --detectOpenHandles
+        working-directory: sample/02-monitoring/test
+        timeout-minutes: 1
+
+      - name: Enable debug logging
+        run: echo "::debug::Enable debug logging"
+
+      - name: List running processes
+        run: ps -ef
+
+      - name: List running processes with top
+        run: top -b -n 1
+
+      - name: List running Docker containers
+        run: docker ps -a
+
+      - name: Run command with timeout
+        run: timeout 30s my-command
+
+      - name: Capture system calls with sysdig
+        run: sysdig -w /tmp/sysdig_capture.scap
+
+      - name: Run my script
+        run: |
+          # Your script code here
+          echo "Running my script..."
+          # ...
+
+      - name: Analyze sysdig capture
+        run: sysdig -r /tmp/sysdig_capture.scap -p "%proc.name %proc.pid %evt.arg.fopis"
