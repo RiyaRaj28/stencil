@@ -76,7 +76,7 @@ jobs:
         uses: actions/setup-node@v4
         
       - name: Install Dependencies for monitoring
-        run: npm ci
+        run: yarn install
         working-directory: sample/02-monitoring
 
       - name: Run Tests
