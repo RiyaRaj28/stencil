@@ -82,3 +82,4 @@ jobs:
       - name: Run Tests
         run: yarn run test:e2e --detectOpenHandles
         working-directory: sample/02-monitoring/test
+        timeout-minutes: 1
