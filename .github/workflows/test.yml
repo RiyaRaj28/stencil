@@ -76,9 +76,9 @@ jobs:
         uses: actions/setup-node@v4
         
       - name: Install Dependencies for monitoring
-        run: yarn install
+        run: npm ci
         working-directory: sample/02-monitoring
 
       - name: Run Tests
-        run: yarn run test:e2e
+        run: yarn run test:e2e --detectOpenHandles
         working-directory: sample/02-monitoring/test
